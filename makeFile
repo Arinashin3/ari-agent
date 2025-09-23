@@ -1,0 +1,4 @@
+env:
+	go env
+build:
+	go build -o ./bin/unisphere_exporter ./cmd/unisphere_exporter

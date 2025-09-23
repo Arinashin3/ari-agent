@@ -1,0 +1,18 @@
+{
+  "@base" : "https://10.77.77.222/api/types/systemCapacity/instances?fields=sizeTotal,sizeUsed,sizeFree,totalLogicalSize,sizePreallocated&per_page=2000&compact=true",
+  "updated" : "2025-09-19T08:16:09.711Z",
+  "links" : [ {
+    "rel" : "self",
+    "href" : "&page=1"
+  } ],
+  "entries" : [ {
+    "content" : {
+      "id" : "0",
+      "sizeFree" : 6128649895936,
+      "sizeTotal" : 7038109220864,
+      "sizeUsed" : 819206684672,
+      "sizePreallocated" : 90252640256,
+      "totalLogicalSize" : 5025111736320
+    }
+  } ]
+}

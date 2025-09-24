@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/Arinashin3/ari-agent/cmd/unisphere_exporter/collector"
-)
+import "github.com/Arinashin3/ari-agent/cmd/unisphere_exporter/collector"
 
 //TIP <p>To run your code, right-click the code and select <b>RunMeter</b>.</p> <p>Alternatively, click
 // the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>RunMeter</b> menu item from here.</p>

@@ -1,7 +1,7 @@
 global:
   server:
     endpoint: 'http://10.77.78.11:8080'          # Default: http://127.0.0.1:8080
-#    api_path: '/api/v1/otlp/v1/metrics'   # Default: "
+    #    api_path: '/api/v1/otlp/v1/metrics'   # Default: "
     insecure: true                         # yes(y), true / no(n), false
   client:
     auth: 'appez'
@@ -16,14 +16,14 @@ server:
   metrics:
     endpoint: 'http://10.77.78.11:9090'
     api_path: '/api/v1/otlp/v1/metrics'
-#    mode: 'grpc'
+    #    mode: 'grpc'
     insecure: true
     enabled: true
   logs:
     endpoint: 'http://10.77.78.11:3100'
     api_path: '/otlp/v1/logs'
     enabled: true
-#    mode: 'grpc'
+  #    mode: 'grpc'
   traces:
     endpoint: ''
     enabled: false

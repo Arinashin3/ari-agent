@@ -1,115 +1,88 @@
 package config
 
+// build: spectrum_exporter
+
 import (
 	"encoding/base64"
 	"errors"
-	"log/slog"
 	"os"
 	"reflect"
 	"strconv"
 
-	"github.com/Arinashin3/ari-agent/flag"
-
 	"gopkg.in/yaml.v3"
 )
 
-var cfg *ConfigYaml
-var logger *slog.Logger
-
-func init() {
-	var err error
-	cfg = newConfiguration()
-	logger = flag.Logger
-
-	logger.Debug("Load configs...")
-
-	// Read Config file and set
-	err = cfg.LoadFile(flag.ConfigFile)
-	if err != nil {
-		logger.Error("Failed to read config file", "error", err.Error())
-		os.Exit(1)
-	}
-
-	// Apply Global Settings...
-	err = cfg.applyGlobal()
-	if err != nil {
-		logger.Error("Failed to set global configs", "error", err.Error())
-		os.Exit(1)
-	}
-
-	// New Exporter
+type SpectrumConfig struct {
+	Global    *GlobalConfig      `yaml: "global,omitempty"`
+	Server    *ServerConfig      `yaml: "server,omitempty"`
+	Clients   []*ClientConfig    `yaml: "targets,omitempty"`
+	Auths     []*AuthConfig      `yaml: "auths,omitempty"`
+	Providers *SpectrumProviders `yaml: "providers,omitempty"`
 }
 
-func newConfiguration() *ConfigYaml {
-	return &ConfigYaml{
-		Global: &GlobalYaml{
-			Server: &GlobalServerYaml{
+type SpectrumProviders struct {
+	System *CommonProviderSystem `yaml: "system,omitempty"`
+}
+
+func NewSpectrumConfiguration() Config {
+	return &SpectrumConfig{
+		Global: &GlobalConfig{
+			Server: &GlobalServerConfig{
 				Endpoint: "http://127.0.0.1:8080",
 				Api_Path: "",
 				Insecure: false,
 				Mode:     "http",
 			},
-			Client: &GlobalClientYaml{
+			Client: &GlobalClientConfig{
 				Auth:     "",
 				Insecure: false,
 			},
-			Provider: &GlobalProviderYaml{
+			Provider: &GlobalProviderConfig{
 				Interval: "1m",
 			},
 		},
-		Server: &ServerYaml{
-			Metrics: &ServerMetricYaml{
+		Server: &ServerConfig{
+			Metrics: &ServerMetricConfig{
 				Enabled: true,
 			},
-			Logs: &ServerLogYaml{
+			Logs: &ServerLogConfig{
 				Enabled: true,
 			},
-			Traces: &ServerTraceYaml{
+			Traces: &ServerTraceConfig{
 				Enabled: true,
 			},
 		},
 		Clients: nil,
 		Auths:   nil,
-		Providers: &ProvidersYaml{
-			System: &ProviderSystem{
-				Enabled: true,
-			},
-			Capacity: &ProviderCapacity{
-				Enabled: true,
-			},
-			Metric_A: &ProviderMetric{
-				Enabled: false,
-			},
-			Metric_B: &ProviderMetric{
-				Enabled: false,
-			},
-			Metric_C: &ProviderMetric{
-				Enabled: false,
-			},
-			Event: &ProviderEvent{
-				Enabled: true,
-				Level:   5,
-			},
-			Lun: &ProviderLun{
-				Enabled: false,
-			},
+		Providers: &SpectrumProviders{
+			System: &CommonProviderSystem{},
 		},
 	}
 }
 
-func (cfg *ConfigYaml) LoadFile(file *string) error {
+func (cfg *SpectrumConfig) LoadFile(file *string) error {
 	ymlContents, err := os.ReadFile(*file)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(ymlContents, &cfg)
+
+	err = yaml.Unmarshal(ymlContents, cfg)
+	if err != nil {
+		return err
+	}
+
+	err = cfg.applyGlobal()
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 // applyGlobal
 // Section 내용이 비어있을 경우,
 // Global 설정을 각각의 Section에 적용
-func (cfg *ConfigYaml) applyGlobal() error {
+func (cfg *SpectrumConfig) applyGlobal() error {
 	// Set Client
 	g := cfg.Global
 	if cfg.Clients == nil {
@@ -173,7 +146,7 @@ func (cfg *ConfigYaml) applyGlobal() error {
 
 // SearchAuth
 // 인증정보를 찾아, base64로 인코딩하여 리턴합니다.
-func (cfg *ConfigYaml) SearchAuth(name string) string {
+func (cfg *SpectrumConfig) SearchAuth(name string) string {
 	for _, auth := range cfg.Auths {
 		if auth.Name == name {
 			return base64.StdEncoding.EncodeToString([]byte(auth.User + ":" + auth.Password))
@@ -182,67 +155,51 @@ func (cfg *ConfigYaml) SearchAuth(name string) string {
 	return ""
 }
 
-func GetConfig() *ConfigYaml {
+func (cfg *SpectrumConfig) GetConfig() *SpectrumConfig {
 	return cfg
 }
 
-func GetProviderSystem() *ProviderSystem {
-	return cfg.Providers.System
-}
-
-func GetProviderCapacity() *ProviderCapacity {
-	return cfg.Providers.Capacity
-}
-
-func GetProviderMetricA() *ProviderMetric {
-	return cfg.Providers.Metric_A
-}
-func GetProviderMetricB() *ProviderMetric {
-	return cfg.Providers.Metric_B
-}
-func GetProviderMetricC() *ProviderMetric {
-	return cfg.Providers.Metric_C
-}
-func GetProviderEvent() *ProviderEvent {
-	return cfg.Providers.Event
-}
-func GetProviderLun() *ProviderLun {
-	return cfg.Providers.Lun
-}
-
-func GetMetricsEndpoint() string {
+func (cfg *SpectrumConfig) GetMetricsEndpoint() string {
 	if cfg.Server.Metrics.Enabled {
 		return cfg.Server.Metrics.Endpoint + cfg.Server.Metrics.Api_Path
 	}
 	return ""
 }
 
-func GetMetricsMode() string {
+func (cfg *SpectrumConfig) GetMetricsMode() string {
 	if cfg.Server.Metrics.Enabled {
 		return cfg.Server.Metrics.Mode
 	}
 	return ""
 }
 
-func GetMetricsInsecure() bool {
+func (cfg *SpectrumConfig) GetMetricsInsecure() bool {
 	insecure, _ := strconv.ParseBool(cfg.Server.Metrics.Insecure)
 	return insecure
 }
 
-func GetLogsEndpoint() string {
+func (cfg *SpectrumConfig) GetLogsEndpoint() string {
 	if cfg.Server.Logs.Enabled {
 		return cfg.Server.Logs.Endpoint + cfg.Server.Logs.Api_Path
 	}
 	return ""
 }
-func GetLogsMode() string {
+func (cfg *SpectrumConfig) GetLogsMode() string {
 	if cfg.Server.Logs.Enabled {
 		return cfg.Server.Logs.Mode
 	}
 	return ""
 }
 
-func GetLogsInsecure() bool {
+func (cfg *SpectrumConfig) GetLogsInsecure() bool {
 	insecure, _ := strconv.ParseBool(cfg.Server.Logs.Insecure)
 	return insecure
+}
+
+func (cfg *SpectrumConfig) GetClientList() []*ClientConfig {
+	return cfg.Clients
+}
+
+func (cfg *SpectrumConfig) GetProvider(moduleName string) interface{} {
+	return reflect.ValueOf(cfg.Providers).Elem().FieldByName(moduleName).Elem()
 }

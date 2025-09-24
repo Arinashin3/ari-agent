@@ -9,7 +9,7 @@ import (
 	"github.com/Arinashin3/ari-agent/utils/provider"
 
 	"go.opentelemetry.io/otel/metric"
-	otlpmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 type capacityProvider struct {
 	moduleName    string
 	interval      time.Duration
-	meterProvider *otlpmetric.MeterProvider
+	meterProvider *sdkMetric.MeterProvider
 	host          *ClientResourceStruct
 }
 

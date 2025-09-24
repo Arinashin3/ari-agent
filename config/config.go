@@ -9,7 +9,7 @@ type Config interface {
 	GetLogsEndpoint() string
 	GetLogsInsecure() bool
 	GetClientList() []*ClientConfig
-	GetProvider(moduleName string) interface{}
+	GetProviderSystem() any
 }
 
 type GlobalConfig struct {
@@ -43,7 +43,7 @@ type ServerConfig struct {
 
 type ServerMetricConfig struct {
 	Endpoint string `yaml: "endpoint,omitempty"`
-	Api_Path string `yaml: "api_path,omitempty"`
+	Api_Path string `yaml:"api_path,omitempty"`
 	Mode     string `yaml: "mode,omitempty"`
 	Insecure string `yaml: "insecure,omitempty"`
 	Enabled  bool   `yaml: "enabled,omitempty"`
@@ -51,7 +51,7 @@ type ServerMetricConfig struct {
 
 type ServerLogConfig struct {
 	Endpoint string `yaml: "endpoint,omitempty"`
-	Api_Path string `yaml: "api_path,omitempty"`
+	Api_Path string `yaml:"api_path,omitempty"`
 	Mode     string `yaml: "mode,omitempty"`
 	Insecure string `yaml: "insecure,omitempty"`
 	Enabled  bool   `yaml: "enabled,omitempty"`
@@ -59,7 +59,7 @@ type ServerLogConfig struct {
 
 type ServerTraceConfig struct {
 	Endpoint string `yaml: "endpoint,omitempty"`
-	Api_Path string `yaml: "api_path,omitempty"`
+	Api_Path string `yaml:"api_path,omitempty"`
 	Mode     string `yaml: "mode,omitempty"`
 	Insecure string `yaml: "insecure,omitempty"`
 	Enabled  bool   `yaml: "enabled,omitempty"`
@@ -80,6 +80,11 @@ type AuthConfig struct {
 
 // Providers...
 type CommonProviderSystem struct {
+	Enabled  bool   `yaml: "enabled,omitempty"`
+	Interval string `yaml: "interval,omitempty"`
+}
+
+type CommonProviderCapacity struct {
 	Enabled  bool   `yaml: "enabled,omitempty"`
 	Interval string `yaml: "interval,omitempty"`
 }

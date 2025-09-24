@@ -133,7 +133,7 @@ func (pv *lunProvider) RunMeter() {
 				} else {
 					fieldValue := reflect.ValueOf(content).FieldByName(field.Name).Interface()
 					var f float64
-					f, err = convert.InterfaceToFloat64(fieldValue)
+					f = convert.InterfaceToFloat64(fieldValue)
 					if err != nil {
 						logger.Error("This type is not supported yet.", "client", pv.host.endpoint, "provider", pv.moduleName, "field", field.Name, "error", err)
 					}

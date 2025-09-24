@@ -35,58 +35,35 @@ server:
 ## auth = 사용할 인증 정보(auths.name)
 ## Insecure = TLS 설정
 clients:
-  - endpoint: 'https://10.77.77.222'
+#  - endpoint: 'https://10.77.77.170:7443'
+#    auth: 'appez'
+#    insecure: true
+#    labels:
+#      env: "production"
+#      host_group: "IBM"
+#
+  - endpoint: 'https://10.77.77.140:7443'
     auth: 'appez'
     insecure: true
     labels:
       env: "production"
-      host_group: "Dell"
-  - endpoint: 'https://10.77.77.221'
-    auth: 'appez'
-    insecure: true
-    labels:
-      env: "production"
-      host_group: "Dell"
+      host_group: "IBM"
 
 auths:
   - name: 'appez'
-    user: 'admin'
-    password: 'Passw0rd1!'
+    user: 'appez'
+    password: 'appez@2024'
 
 # Providers Sections
 # default :
 # if interval is not define, that will be to set global.
 providers:
-  system:
+  lssystem:
     enabled: true
   capacity:
     enabled: true
-  metric_a:
-    paths:
-      - "sp.*.physical.coreCount"
-      - "sp.*.cpu.summary.busyTicks"
-      - "sp.*.blockCache.global.summary.cleanBytes"
-      - "sp.*.blockCache.global.summary.cleanPages"
-      - "sp.*.blockCache.global.summary.dirtyBytes"
-      - "sp.*.blockCache.global.summary.dirtyPages"
-      - "sp.*.blockCache.global.summary.flushedBlocks"
-      - "sp.*.blockCache.global.summary.flushedes"
-    interval: 1m
-    enabled: true
-  metric_b:
-    paths:
-      - "sp.*.physical.disk.*.readBlocks"
-      - "sp.*.physical.disk.*.writeBlocks"
-      - "sp.*.physical.disk.*.reads"
-      - "sp.*.physical.disk.*.writes"
-      - "sp.*.fibreChannel.fePort.%"
-      - "sp.*.iscsi.fePort.%"
-    interval: 1m
-    enabled: true
-  metric_c:
-    paths:
-    interval: 5m
-    enabled: true
+  lssystemstats:
+
   event:
     enabled: true
     level: 5

@@ -1,4 +1,4 @@
-package config
+package cfgUnisphere
 
 // build: spectrum_exporter
 
@@ -9,58 +9,56 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/Arinashin3/ari-agent/config"
 	"gopkg.in/yaml.v3"
 )
 
-type SpectrumConfig struct {
-	Global    *GlobalConfig      `yaml: "global,omitempty"`
-	Server    *ServerConfig      `yaml: "server,omitempty"`
-	Clients   []*ClientConfig    `yaml: "targets,omitempty"`
-	Auths     []*AuthConfig      `yaml: "auths,omitempty"`
-	Providers *SpectrumProviders `yaml: "providers,omitempty"`
+type UnisphereConfig struct {
+	Global    *config.GlobalConfig   `yaml: "global,omitempty"`
+	Server    *config.ServerConfig   `yaml: "server,omitempty"`
+	Clients   []*config.ClientConfig `yaml: "targets,omitempty"`
+	Auths     []*config.AuthConfig   `yaml: "auths,omitempty"`
+	Providers *UnisphereProviders    `yaml: "providers,omitempty"`
 }
 
-type SpectrumProviders struct {
-	System *CommonProviderSystem `yaml: "system,omitempty"`
+type UnisphereProviders struct {
+	System *config.CommonProviderSystem `yaml: "system,omitempty"`
 }
 
-func NewSpectrumConfiguration() Config {
-	return &SpectrumConfig{
-		Global: &GlobalConfig{
-			Server: &GlobalServerConfig{
+func NewUnisphereConfiguration() *UnisphereConfig {
+	return &UnisphereConfig{
+		Global: &config.GlobalConfig{
+			Server: &config.GlobalServerConfig{
 				Endpoint: "http://127.0.0.1:8080",
 				Api_Path: "",
 				Insecure: false,
 				Mode:     "http",
 			},
-			Client: &GlobalClientConfig{
+			Client: &config.GlobalClientConfig{
 				Auth:     "",
 				Insecure: false,
 			},
-			Provider: &GlobalProviderConfig{
+			Provider: &config.GlobalProviderConfig{
 				Interval: "1m",
 			},
 		},
-		Server: &ServerConfig{
-			Metrics: &ServerMetricConfig{
+		Server: &config.ServerConfig{
+			Metrics: &config.ServerMetricConfig{
 				Enabled: true,
 			},
-			Logs: &ServerLogConfig{
+			Logs: &config.ServerLogConfig{
 				Enabled: true,
 			},
-			Traces: &ServerTraceConfig{
+			Traces: &config.ServerTraceConfig{
 				Enabled: true,
 			},
 		},
 		Clients: nil,
 		Auths:   nil,
-		Providers: &SpectrumProviders{
-			System: &CommonProviderSystem{},
-		},
 	}
 }
 
-func (cfg *SpectrumConfig) LoadFile(file *string) error {
+func (cfg *UnisphereConfig) LoadFile(file *string) error {
 	ymlContents, err := os.ReadFile(*file)
 	if err != nil {
 		return err
@@ -82,7 +80,7 @@ func (cfg *SpectrumConfig) LoadFile(file *string) error {
 // applyGlobal
 // Section 내용이 비어있을 경우,
 // Global 설정을 각각의 Section에 적용
-func (cfg *SpectrumConfig) applyGlobal() error {
+func (cfg *UnisphereConfig) applyGlobal() error {
 	// Set Client
 	g := cfg.Global
 	if cfg.Clients == nil {
@@ -146,7 +144,7 @@ func (cfg *SpectrumConfig) applyGlobal() error {
 
 // SearchAuth
 // 인증정보를 찾아, base64로 인코딩하여 리턴합니다.
-func (cfg *SpectrumConfig) SearchAuth(name string) string {
+func (cfg *UnisphereConfig) SearchAuth(name string) string {
 	for _, auth := range cfg.Auths {
 		if auth.Name == name {
 			return base64.StdEncoding.EncodeToString([]byte(auth.User + ":" + auth.Password))
@@ -155,51 +153,50 @@ func (cfg *SpectrumConfig) SearchAuth(name string) string {
 	return ""
 }
 
-func (cfg *SpectrumConfig) GetConfig() *SpectrumConfig {
+func (cfg *UnisphereConfig) GetConfig() *UnisphereConfig {
 	return cfg
 }
 
-func (cfg *SpectrumConfig) GetMetricsEndpoint() string {
+func (cfg *UnisphereConfig) GetMetricsEndpoint() string {
 	if cfg.Server.Metrics.Enabled {
 		return cfg.Server.Metrics.Endpoint + cfg.Server.Metrics.Api_Path
 	}
 	return ""
 }
 
-func (cfg *SpectrumConfig) GetMetricsMode() string {
+func (cfg *UnisphereConfig) GetMetricsMode() string {
 	if cfg.Server.Metrics.Enabled {
 		return cfg.Server.Metrics.Mode
 	}
 	return ""
 }
 
-func (cfg *SpectrumConfig) GetMetricsInsecure() bool {
+func (cfg *UnisphereConfig) GetMetricsInsecure() bool {
 	insecure, _ := strconv.ParseBool(cfg.Server.Metrics.Insecure)
 	return insecure
 }
 
-func (cfg *SpectrumConfig) GetLogsEndpoint() string {
+func (cfg *UnisphereConfig) GetLogsEndpoint() string {
 	if cfg.Server.Logs.Enabled {
 		return cfg.Server.Logs.Endpoint + cfg.Server.Logs.Api_Path
 	}
 	return ""
 }
-func (cfg *SpectrumConfig) GetLogsMode() string {
+func (cfg *UnisphereConfig) GetLogsMode() string {
 	if cfg.Server.Logs.Enabled {
 		return cfg.Server.Logs.Mode
 	}
 	return ""
 }
 
-func (cfg *SpectrumConfig) GetLogsInsecure() bool {
+func (cfg *UnisphereConfig) GetLogsInsecure() bool {
 	insecure, _ := strconv.ParseBool(cfg.Server.Logs.Insecure)
 	return insecure
 }
 
-func (cfg *SpectrumConfig) GetClientList() []*ClientConfig {
+func (cfg *UnisphereConfig) GetClientList() []*config.ClientConfig {
 	return cfg.Clients
 }
-
-func (cfg *SpectrumConfig) GetProvider(moduleName string) interface{} {
-	return reflect.ValueOf(cfg.Providers).Elem().FieldByName(moduleName).Elem()
+func (cfg *UnisphereConfig) GetProviderSystem() *config.CommonProviderSystem {
+	return cfg.Providers.System
 }

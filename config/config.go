@@ -1,5 +1,10 @@
 package config
 
+import (
+	"strconv"
+	"time"
+)
+
 type Config interface {
 	LoadFile(file *string) error
 	GetMetricsMode() string
@@ -87,4 +92,27 @@ type CommonProviderSystem struct {
 type CommonProviderCapacity struct {
 	Enabled  bool   `yaml: "enabled,omitempty"`
 	Interval string `yaml: "interval,omitempty"`
+}
+
+type CommonProviderLun struct {
+	Enabled  bool   `yaml: "enabled,omitempty"`
+	Interval string `yaml: "interval,omitempty"`
+}
+
+type CommonProviderDefaults struct {
+	Enabled  string `yaml:"enabled,omitempty"`
+	Interval string `yaml:"interval,omitempty"`
+}
+
+func (pv *CommonProviderDefaults) GetEnabled(defaults bool) bool {
+	if pv.Enabled == "" {
+		return defaults
+	}
+	enabled, _ := strconv.ParseBool(pv.Enabled)
+	return enabled
+}
+
+func (pv *CommonProviderDefaults) GetInterval() time.Duration {
+	interval, _ := time.ParseDuration(pv.Interval)
+	return interval
 }

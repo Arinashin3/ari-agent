@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-func NewClient(endpoint string, auth string, insecure bool) *Client {
-	return &Client{
+func NewClient(endpoint string, auth string, insecure bool) *UnisphereClient {
+	return &UnisphereClient{
 		endpoint: endpoint,
 		auth:     auth,
 		hc: &http.Client{
@@ -36,7 +36,7 @@ type StatusUnProcessableEntityError struct {
 	} `json:"error"`
 }
 
-func (c *Client) get(path string) ([]byte, error) {
+func (c *UnisphereClient) get(path string) ([]byte, error) {
 	req, err := http.NewRequest("GET", c.endpoint+path, nil)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (c *Client) get(path string) ([]byte, error) {
 
 }
 
-func (c *Client) post(path string, data []byte) ([]byte, error) {
+func (c *UnisphereClient) post(path string, data []byte) ([]byte, error) {
 	if !c.lastAccess {
 		return nil, nil
 	}

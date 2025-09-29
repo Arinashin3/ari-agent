@@ -24,7 +24,7 @@ type EventContent struct {
 	Arguments    []string  `json:"arguments,omitempty"`
 }
 
-func (c *Client) GetEvent(fields []string, createTime time.Time) (*EventInstances, error) {
+func (c *UnisphereClient) GetEvent(fields []string, createTime time.Time) (*EventInstances, error) {
 	path := "/api/types/event/instances?compact=true"
 	if len(fields) != 0 {
 		path += "&fields=" + strings.Join(fields, ",")

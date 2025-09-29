@@ -110,7 +110,7 @@ type LsSystemInst struct {
 }
 
 func (c *Client) PostLsSystem() *LsSystemInst {
-	body, err := c.post("/rest/lssystem")
+	body, err := c.post("/rest/lssystem", nil)
 	if err != nil {
 		c.lastAuth = false
 		return nil

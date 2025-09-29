@@ -1,86 +1,82 @@
-package collector
+package main
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	config2 "github.com/Arinashin3/ari-agent/cmd/unisphere_exporter/config"
+	"github.com/Arinashin3/ari-agent/config/cfgUnisphere"
 	"github.com/Arinashin3/ari-agent/utils/provider"
-
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	otlpmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
 func init() {
-	InitClientList()
-	for _, cl := range ClientList {
-		registMeterProvider(newMetricRealTimeQueryProvider(cl, "metric_a"))
-		registMeterProvider(newMetricRealTimeQueryProvider(cl, "metric_b"))
-		registMeterProvider(newMetricRealTimeQueryProvider(cl, "metric_c"))
+	registProvider("metric_a", &metricProvider{moduleName: "metric_a"})
+	registProvider("metric_b", &metricProvider{moduleName: "metric_b"})
+	registProvider("metric_c", &metricProvider{moduleName: "metric_c"})
+}
+
+func (pv *metricProvider) IsDefaultEnabled() bool {
+	return false
+}
+
+func (pv *metricProvider) NewProvider(moduleName string, cl *ClientDesc) Provider {
+	var pvConf *cfgUnisphere.UnisphereProviderMetric
+	switch moduleName {
+	case "metric_a":
+		pvConf = cfg.Providers.Metric_A
+	case "metric_b":
+		pvConf = cfg.Providers.Metric_B
+	case "metric_c":
+		pvConf = cfg.Providers.Metric_C
+	}
+	if pvConf == nil {
+		return nil
+	}
+	if pvConf.Paths == nil {
+		return nil
+	}
+
+	enabled := pvConf.GetEnabled(pv.IsDefaultEnabled())
+	interval := pvConf.GetInterval()
+
+	if !enabled {
+		return nil
+	}
+	if MetricExporter == nil {
+		return nil
+	}
+	mp := provider.NewMeterProvider(serviceName, interval, MetricExporter)
+	return &metricProvider{
+		moduleName:    moduleName,
+		queryId:       "",
+		interval:      interval,
+		paths:         pvConf.Paths,
+		meterProvider: mp,
+		clientDesc:    cl,
 	}
 }
 
-type MetricRealTimeQueryProvider struct {
+type metricProvider struct {
 	moduleName    string
 	interval      time.Duration
 	queryId       string
 	paths         []string
-	meterProvider *otlpmetric.MeterProvider
-	host          *ClientResourceStruct
+	meterProvider *sdkMetric.MeterProvider
+	clientDesc    *ClientDesc
 }
 
-func newMetricRealTimeQueryProvider(cl *ClientResourceStruct, moduleName string) MeterProvider {
-	var m *config2.ProviderMetric
-
-	if MeterExporter == nil {
-		return nil
-	}
-
-	switch moduleName {
-	case "metric_a":
-		m = config2.GetProviderMetricA()
-	case "metric_b":
-		m = config2.GetProviderMetricB()
-	case "metric_c":
-		m = config2.GetProviderMetricC()
-
-	}
-	if !m.Enabled {
-		return nil
-	}
-	if len(m.Paths) == 0 {
-		return nil
-	}
-	interval, err := time.ParseDuration(m.Interval)
-	if err != nil {
-		logger.Error("Failed to parse interval", "provider", moduleName, "error", err)
-		return nil
-	}
-
-	mp := provider.NewMeterProvider(serviceName, interval, MeterExporter)
-
-	return &MetricRealTimeQueryProvider{
-		moduleName:    moduleName,
-		interval:      interval,
-		paths:         m.Paths,
-		meterProvider: mp,
-		host:          cl,
-	}
-}
-
-func (pv *MetricRealTimeQueryProvider) RunMeter() {
-	// Set Meter
-	logger.Info("Starting provider", "endpoint", pv.host.endpoint, "provider", pv.moduleName)
+func (pv *metricProvider) Run() {
+	logger.Info("Starting provider", "endpoint", pv.clientDesc.endpoint, "provider", pv.moduleName)
 	meter := pv.meterProvider.Meter(pv.moduleName)
+	uc := pv.clientDesc.client
 
-	// Get Metric Descriptions...
-	var err error
-	uc := pv.host.client
-
+	// Get Metric Descriptions from Unisphere API...
 	metricData, err := uc.GetMetric([]string{"name", "path", "type", "unitDisplayString", "description"}, "realtime")
 	if err != nil {
 		logger.Error("Failed to get metric instances", "provider", pv.moduleName, "error", err)
@@ -88,8 +84,9 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 	}
 
 	paths := pv.paths
-	var metricDescList []*MetricDescriptor
+	var metricDescList []*provider.MetricDescriptor
 	var metricPaths []string
+
 	for _, entry := range metricData.Entries {
 		content := entry.Content
 		for _, path := range paths {
@@ -124,28 +121,31 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 				tmp := "unisphere_" + strings.Replace(strings.ToLower(content.Path), ".*.", "_", -1)
 
 				metricPaths = append(metricPaths, content.Path)
-				metricDescList = append(metricDescList, &MetricDescriptor{
-					key:      content.Path,
-					name:     strings.Replace(tmp, ".", "_", -1),
-					desc:     content.Description,
-					unit:     strings.ToLower(content.UnitDisplayString),
-					typeName: mType,
+				metricDescList = append(metricDescList, &provider.MetricDescriptor{
+					Key:      content.Path,
+					Name:     strings.Replace(tmp, ".", "_", -1),
+					Desc:     content.Description,
+					Unit:     strings.ToLower(content.UnitDisplayString),
+					TypeName: mType,
 				})
 			}
 		}
 	}
 
+	// Register Metrics...
 	var observableMap map[string]metric.Float64Observable
-	observableMap = mappingMetricDescriptor(meter, metricDescList)
+	observableMap = provider.CreateMapMetricDescriptor(meter, metricDescList, logger)
 
-	var observables []metric.Observable
-	for _, obs := range observableMap {
-		observables = append(observables, obs)
+	// Register Metrics for Observables...
+	var observableArray []metric.Observable
+	for _, obserable := range observableMap {
+		observableArray = append(observableArray, obserable)
 	}
 
-	if len(metricPaths) > 48 {
+	// Metric Realtime Query Maximum Paths == 48
+	if len(observableArray) > 48 {
 		logger.Error("Too Many Paths", "provider", pv.moduleName, "path_count", len(metricPaths))
-
+		return
 	}
 	logger.Info("Create Metric Query", "provider", pv.moduleName, "path_count", len(metricPaths))
 
@@ -156,6 +156,7 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 
 	// Callback
 	meter.RegisterCallback(func(ctx context.Context, observer metric.Observer) error {
+
 		if pv.queryId == "" {
 			pv.queryId, err = uc.PostMetricRealTimeQuery(metricPaths, pv.interval)
 			if err != nil {
@@ -164,18 +165,19 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 			}
 		}
 
-		if pv.host.attributes == nil {
-			return nil
+		// Client Attributes
+		if pv.clientDesc.hostLabels == nil {
+			return errors.New("hostLabels not set")
 		}
+		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
-		clientAttrs := metric.WithAttributes(pv.host.attributes...)
-
-		// Metric (MetricRealTimeQuery Performance)
+		// Request Data
 		data, err := uc.GetMetricQueryResult(pv.queryId)
 		if err != nil {
-			logger.Error("Failed to get metric query", "provider", pv.moduleName, "error", err)
-			return nil
+			logger.Error("Failed to get metric", "error", err)
 		}
+
+		// Metric Attributes...
 
 		for _, entry := range data.Entries {
 			content := entry.Content
@@ -198,7 +200,7 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 					if err != nil {
 						logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
 					}
-					observer.ObserveFloat64(observableMap[strings.ToLower(content.Path)], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1)))
+					observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1)))
 					continue
 				}
 				for k2, v2 := range v1.(map[string]interface{}) {
@@ -208,7 +210,7 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 						if err != nil {
 							logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
 						}
-						observer.ObserveFloat64(observableMap[strings.ToLower(content.Path)], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2)))
+						observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2)))
 						continue
 					}
 					for k3, v3 := range v2.(map[string]interface{}) {
@@ -218,7 +220,7 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 							if err != nil {
 								logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
 							}
-							observer.ObserveFloat64(observableMap[strings.ToLower(content.Path)], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2), attribute.String(labels[2], k3)))
+							observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2), attribute.String(labels[2], k3)))
 							continue
 						}
 					}
@@ -228,5 +230,6 @@ func (pv *MetricRealTimeQueryProvider) RunMeter() {
 		}
 
 		return nil
-	}, observables...)
+	}, observableArray...)
+
 }

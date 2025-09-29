@@ -18,7 +18,7 @@ type MetricQueryResultInstance struct {
 	} `json:"entries"`
 }
 
-func (c *Client) GetMetricQueryResult(queryId string) (*MetricQueryResultInstance, error) {
+func (c *UnisphereClient) GetMetricQueryResult(queryId string) (*MetricQueryResultInstance, error) {
 	path := "/api/types/metricQueryResult/instances?compact=true"
 	if queryId == "" {
 		return nil, errors.New("queryId is required")

@@ -40,7 +40,7 @@ type SystemContent struct {
 	IsRemoteSysInterfaceAutoPair bool   `json:"isRemoteSysInterfaceAutoPair,omitempty"`
 }
 
-func (c *Client) GetSystem(fields []string) (*SystemInstances, error) {
+func (c *UnisphereClient) GetSystem(fields []string) (*SystemInstances, error) {
 	path := "/api/types/system/instances?compact=true"
 	if len(fields) != 0 {
 		path += "&fields=" + strings.Join(fields, ",")

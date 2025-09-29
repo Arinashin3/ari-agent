@@ -1,68 +1,62 @@
-package collector
+package main
 
 import (
 	"context"
 	"time"
 
-	"github.com/Arinashin3/ari-agent/cmd/unisphere_exporter/config"
 	"github.com/Arinashin3/ari-agent/utils/provider"
-
 	"go.opentelemetry.io/otel/log"
-	otlplog "go.opentelemetry.io/otel/sdk/log"
+	sdkLog "go.opentelemetry.io/otel/sdk/log"
 )
 
 func init() {
-	InitClientList()
-	for _, cl := range ClientList {
-		registLoggerProvider(newEventLogProvider(cl))
-
-	}
-}
-
-type eventLogProvider struct {
-	moduleName     string
-	interval       time.Duration
-	queryId        string
-	level          int
-	loggerProvider *otlplog.LoggerProvider
-	host           *ClientResourceStruct
-}
-
-func newEventLogProvider(cl *ClientResourceStruct) LoggerProvider {
 	moduleName := "event"
-	pvConf := config.GetProviderEvent()
-	if !pvConf.Enabled {
+	registProvider(moduleName, &eventProvider{moduleName: moduleName})
+}
+
+func (pv *eventProvider) IsDefaultEnabled() bool {
+	return true
+}
+
+func (pv *eventProvider) NewProvider(moduleName string, cl *ClientDesc) Provider {
+	pvConf := cfg.Providers.Event
+	enabled := pvConf.GetEnabled(pv.IsDefaultEnabled())
+	interval := pvConf.GetInterval()
+
+	if !enabled {
 		return nil
 	}
 	if LogExporter == nil {
 		return nil
 	}
-	interval, err := time.ParseDuration(pvConf.Interval)
-	if err != nil {
-		logger.Error("Error parsing interval ", "provider", moduleName, err)
-		return nil
-	}
-
 	lp := provider.NewLoggerProvider(serviceName, interval, LogExporter)
-
-	return &eventLogProvider{
+	return &eventProvider{
 		moduleName:     moduleName,
 		interval:       interval,
 		level:          pvConf.Level,
 		loggerProvider: lp,
-		host:           cl,
+		clientDesc:     cl,
 	}
 }
 
-func (pv *eventLogProvider) RunLogger() {
-	logger.Info("Starting provider", "endpoint", pv.host.endpoint, "provider", pv.moduleName)
+type eventProvider struct {
+	moduleName     string
+	interval       time.Duration
+	level          int
+	loggerProvider *sdkLog.LoggerProvider
+	clientDesc     *ClientDesc
+}
+
+func (pv *eventProvider) Run() {
+	logger.Info("Starting provider", "endpoint", pv.clientDesc.endpoint, "provider", pv.moduleName)
 	ctx := context.Background()
 	ctime := time.Now().Add(-time.Hour).UTC()
-	uc := pv.host.client
+	uc := pv.clientDesc.client
 	lp := pv.loggerProvider
 
 	for {
-		pvlogger := lp.Logger(pv.moduleName, log.WithInstrumentationAttributes(pv.host.attributes...))
+
+		pvlogger := lp.Logger(pv.moduleName, log.WithInstrumentationAttributes(pv.clientDesc.hostLabels...))
 		var fields = []string{
 			"creationTime",
 			"severity",

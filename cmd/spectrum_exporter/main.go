@@ -49,7 +49,7 @@ func registProvider(moduleName string, pv Provider) error {
 }
 
 func main() {
-	// Set Flag &nd Logger
+	// Set Flag & Logger
 	promslogConfig := &promslog.Config{}
 	promslogflag.AddFlags(kingpin.CommandLine, promslogConfig)
 	kingpin.HelpFlag.Short('h')
@@ -57,7 +57,7 @@ func main() {
 
 	logger = promslog.New(promslogConfig)
 
-	// Load Configuration Set Configuratios...
+	// Load Configuration Set Configurations...
 	logger.Info("Load Configs...")
 	cfg = cfgSpectrum.NewSpectrumConfiguration()
 	err := cfg.LoadFile(configFile)
@@ -91,6 +91,7 @@ func main() {
 		}
 	}
 
+	// Check Failed
 	if isFailed {
 		logger.Error("Failed to load configs...")
 		os.Exit(1)

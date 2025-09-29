@@ -22,8 +22,9 @@ type SpectrumConfig struct {
 }
 
 type SpectrumProviders struct {
-	Lssystem *SpectrumProviderLsSystem      `yaml: "lssystem,omitempty"`
-	Capacity *config.CommonProviderCapacity `yaml: "capacity,omitempty"`
+	System      *config.CommonProviderDefaults `yaml: "system,omitempty"`
+	Performance *config.CommonProviderDefaults `yaml: "performance,omitempty"`
+	Event       *config.CommonProviderDefaults `yaml: "event,omitempty"`
 }
 
 func NewSpectrumConfiguration() *SpectrumConfig {
@@ -57,7 +58,9 @@ func NewSpectrumConfiguration() *SpectrumConfig {
 		Clients: nil,
 		Auths:   nil,
 		Providers: &SpectrumProviders{
-			Lssystem: &SpectrumProviderLsSystem{},
+			System:      &config.CommonProviderDefaults{},
+			Performance: &config.CommonProviderDefaults{},
+			Event:       &config.CommonProviderDefaults{},
 		},
 	}
 }
@@ -128,17 +131,17 @@ func (cfg *SpectrumConfig) applyGlobal() error {
 		}
 	}
 
-	// Check Error to parse global provider interval
+	//Check Error to parse global provider interval
 	_, err := time.ParseDuration(g.Provider.Interval)
 	if err != nil {
 		return err
 	}
-	// At the Providers, if value of field is null, then Apply Global
+	//At the Providers, if value of field is null, then Apply Global
 	pvNum := reflect.ValueOf(cfg.Providers).Elem().NumField()
 	for i := 0; i < pvNum; i++ {
 		pv := reflect.ValueOf(cfg.Providers).Elem().Field(i).Elem()
 
-		// Apply Global Interval
+		//Apply Global Interval
 		interval := pv.FieldByName("Interval")
 		if interval.String() == "" {
 			interval.SetString(cfg.Global.Provider.Interval)

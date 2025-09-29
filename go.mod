@@ -4,6 +4,7 @@ go 1.23.8
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/prometheus/common v0.66.1
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.14.0
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

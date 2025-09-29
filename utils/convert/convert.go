@@ -48,9 +48,13 @@ func InterfaceToFloat64(t interface{}) (float64, error) {
 	}
 }
 
-func UnitConvert(s string, toUnit string) float64 {
+func ParseUnitConvert(s string, toUnit string) float64 {
 	v, _ := units.ParseBase2Bytes(s)
 	toUnit = strings.ToLower(toUnit)
+	return UnitConvert(float64(v), toUnit)
+}
+
+func UnitConvert[T int | int64 | float64](v T, toUnit string) float64 {
 	switch toUnit {
 	case "byte", "b":
 		return float64(v) / Bytes

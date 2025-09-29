@@ -1,6 +1,7 @@
 package spectrum
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -79,13 +80,13 @@ func (c *Client) login() error {
 	return nil
 }
 
-func (c *Client) post(path string) ([]byte, error) {
+func (c *Client) post(path string, reqBody []byte) ([]byte, error) {
 	err := c.login()
 	if err != nil {
 		return nil, err
 	}
 	url := c.endpoint + path
-	req, err := http.NewRequest("POST", url, nil)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}

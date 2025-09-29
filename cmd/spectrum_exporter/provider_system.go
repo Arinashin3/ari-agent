@@ -19,7 +19,7 @@ type systemProvider struct {
 }
 
 func init() {
-	moduleName := "lssystem"
+	moduleName := "system"
 	registProvider(moduleName, &systemProvider{moduleName: moduleName})
 }
 
@@ -28,7 +28,7 @@ func (pv *systemProvider) IsDefaultEnabled() bool {
 }
 
 func (pv *systemProvider) NewProvider(moduleName string, cl *ClientDesc) Provider {
-	pvConf := cfg.Providers.Lssystem
+	pvConf := cfg.Providers.System
 	enabled := pvConf.GetEnabled(pv.IsDefaultEnabled())
 	interval := pvConf.GetInterval()
 
@@ -47,7 +47,7 @@ func (pv *systemProvider) NewProvider(moduleName string, cl *ClientDesc) Provide
 	}
 }
 
-var lsSystemMetricDescs = []*provider.MetricDescriptor{
+var SystemMetricDescs = []*provider.MetricDescriptor{
 	{
 		Key:      "info",
 		Name:     "spectrum_system_info",
@@ -83,14 +83,22 @@ var lsSystemMetricDescs = []*provider.MetricDescriptor{
 		Unit:     "mb",
 		TypeName: "gauge",
 	},
+	{
+		Key:      "SpaceAllocatedToVdisks",
+		Name:     "spectrum_system_allocated_to_vdisks",
+		Desc:     "Information about the system",
+		Unit:     "mb",
+		TypeName: "gauge",
+	},
 }
 
 func (pv *systemProvider) Run() {
+	logger.Info("Starting provider", "endpoint", pv.clientDesc.endpoint, "provider", pv.moduleName)
 	meter := pv.meterProvider.Meter(pv.moduleName)
 
 	// Register Metrics...
 	var observableMap map[string]metric.Float64Observable
-	observableMap = provider.CreateMapMetricDescriptor(meter, lsSystemMetricDescs, logger)
+	observableMap = provider.CreateMapMetricDescriptor(meter, SystemMetricDescs, logger)
 
 	// Register Metrics for Observables...
 	var observableArray []metric.Observable
@@ -119,10 +127,11 @@ func (pv *systemProvider) Run() {
 			attribute.String("firmware.version", data.CodeLevel),
 		)
 		observer.ObserveFloat64(observableMap["info"], 1, clientAttrs, infoAttrs)
-		observer.ObserveFloat64(observableMap["TotalVdiskCapacity"], convert.UnitConvert(data.TotalVdiskCapacity, "mb"), clientAttrs)
-		observer.ObserveFloat64(observableMap["TotalMdiskCapacity"], convert.UnitConvert(data.TotalMdiskCapacity, "mb"), clientAttrs)
-		observer.ObserveFloat64(observableMap["TotalUsedCapacity"], convert.UnitConvert(data.TotalUsedCapacity, "mb"), clientAttrs)
-		observer.ObserveFloat64(observableMap["TotalFreeSpace"], convert.UnitConvert(data.TotalFreeSpace, "mb"), clientAttrs)
+		observer.ObserveFloat64(observableMap["TotalVdiskCapacity"], convert.ParseUnitConvert(data.TotalVdiskCapacity, "mb"), clientAttrs)
+		observer.ObserveFloat64(observableMap["TotalMdiskCapacity"], convert.ParseUnitConvert(data.TotalMdiskCapacity, "mb"), clientAttrs)
+		observer.ObserveFloat64(observableMap["TotalUsedCapacity"], convert.ParseUnitConvert(data.TotalUsedCapacity, "mb"), clientAttrs)
+		observer.ObserveFloat64(observableMap["TotalFreeSpace"], convert.ParseUnitConvert(data.TotalFreeSpace, "mb"), clientAttrs)
+		observer.ObserveFloat64(observableMap["SpaceAllocatedToVdisks"], convert.ParseUnitConvert(data.SpaceAllocatedToVdisks, "mb"), clientAttrs)
 
 		return nil
 	}, observableArray...)

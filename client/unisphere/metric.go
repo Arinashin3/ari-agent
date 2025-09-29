@@ -30,7 +30,7 @@ type MetricContent struct {
 //
 // choose fields : id, name, path, type, description, isHistoricalAvailable, isRealtimeAvailable, unitDisplayString
 // choose filterMode : "historical", "realtime", "both", "none"
-func (c *Client) GetMetric(fields []string, filterMode string) (*MetricInstances, error) {
+func (c *UnisphereClient) GetMetric(fields []string, filterMode string) (*MetricInstances, error) {
 	path := "/api/types/metric/instances?compact=true"
 	if len(fields) > 0 {
 		path += "&fields=" + strings.Join(fields, ",")

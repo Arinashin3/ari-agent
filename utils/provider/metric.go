@@ -7,23 +7,23 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	otlpmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
-func NewMeterProvider(svName string, interval time.Duration, exp *otlpmetric.Exporter) *otlpmetric.MeterProvider {
-	return otlpmetric.NewMeterProvider(
-		otlpmetric.WithResource(resource.NewSchemaless(attribute.String("service.name", svName))),
-		otlpmetric.WithReader(
-			otlpmetric.NewPeriodicReader(*exp,
-				otlpmetric.WithInterval(interval),
+func NewMeterProvider(svName string, interval time.Duration, exp *sdkMetric.Exporter) *sdkMetric.MeterProvider {
+	return sdkMetric.NewMeterProvider(
+		sdkMetric.WithResource(resource.NewSchemaless(attribute.String("service.name", svName))),
+		sdkMetric.WithReader(
+			sdkMetric.NewPeriodicReader(*exp,
+				sdkMetric.WithInterval(interval),
 			),
 		),
 	)
 }
 
-func NewMetricExporter(ctx context.Context, mode string, endpoint string, insecure bool) (*otlpmetric.Exporter, error) {
-	var exp otlpmetric.Exporter
+func NewMetricExporter(ctx context.Context, mode string, endpoint string, insecure bool) (*sdkMetric.Exporter, error) {
+	var exp sdkMetric.Exporter
 	var err error
 	switch mode {
 	case "http":

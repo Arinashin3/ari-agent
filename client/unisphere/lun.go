@@ -42,7 +42,7 @@ const (
 	LunTypeVmWareISCSI
 )
 
-func (c *Client) GetLun(fields []string) (*LunInstances, error) {
+func (c *UnisphereClient) GetLun(fields []string) (*LunInstances, error) {
 	path := "/api/types/lun/instances?compact=true"
 	if len(fields) != 0 {
 		path += "&fields=" + strings.Join(fields, ",")

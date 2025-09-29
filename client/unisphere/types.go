@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Client struct {
+type UnisphereClient struct {
 	endpoint   string
 	auth       string
 	token      string

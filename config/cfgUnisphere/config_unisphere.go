@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/Arinashin3/ari-agent/config"
 	"gopkg.in/yaml.v3"
@@ -22,7 +23,13 @@ type UnisphereConfig struct {
 }
 
 type UnisphereProviders struct {
-	System *config.CommonProviderSystem `yaml: "system,omitempty"`
+	System   *config.CommonProviderDefaults `yaml:"system,omitempty"`
+	Lun      *config.CommonProviderDefaults `yaml:"lun,omitempty"`
+	Capacity *config.CommonProviderDefaults `yaml:"capacity,omitempty"`
+	Metric_A *UnisphereProviderMetric       `yaml:"metric_a,omitempty"`
+	Metric_B *UnisphereProviderMetric       `yaml:"metric_b,omitempty"`
+	Metric_C *UnisphereProviderMetric       `yaml:"metric_c,omitempty"`
+	Event    *UnisphereProviderEvent        `yaml:"event,omitempty"`
 }
 
 func NewUnisphereConfiguration() *UnisphereConfig {
@@ -55,6 +62,17 @@ func NewUnisphereConfiguration() *UnisphereConfig {
 		},
 		Clients: nil,
 		Auths:   nil,
+		Providers: &UnisphereProviders{
+			System:   &config.CommonProviderDefaults{},
+			Lun:      &config.CommonProviderDefaults{},
+			Capacity: &config.CommonProviderDefaults{},
+			Metric_A: &UnisphereProviderMetric{},
+			Metric_B: &UnisphereProviderMetric{},
+			Metric_C: &UnisphereProviderMetric{},
+			Event: &UnisphereProviderEvent{
+				Level: 5,
+			},
+		},
 	}
 }
 
@@ -124,21 +142,28 @@ func (cfg *UnisphereConfig) applyGlobal() error {
 		}
 	}
 
-	// Set Global config at Providers
+	// Check Error to parse global provider interval
+	_, err := time.ParseDuration(g.Provider.Interval)
+	if err != nil {
+		return err
+	}
+	// At the Providers, if value of field is null, then Apply Global
 	pvNum := reflect.ValueOf(cfg.Providers).Elem().NumField()
 	for i := 0; i < pvNum; i++ {
 		pv := reflect.ValueOf(cfg.Providers).Elem().Field(i).Elem()
 
-		// Check Enabled
-		enabled := pv.FieldByName("Enabled").Bool()
-		if !enabled {
-			continue
-		}
+		// Apply Global Interval
 		interval := pv.FieldByName("Interval")
 		if interval.String() == "" {
 			interval.SetString(cfg.Global.Provider.Interval)
+		} else {
+			_, err = time.ParseDuration(interval.String())
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -196,7 +221,4 @@ func (cfg *UnisphereConfig) GetLogsInsecure() bool {
 
 func (cfg *UnisphereConfig) GetClientList() []*config.ClientConfig {
 	return cfg.Clients
-}
-func (cfg *UnisphereConfig) GetProviderSystem() *config.CommonProviderSystem {
-	return cfg.Providers.System
 }

@@ -36,7 +36,7 @@ type SystemCapacityContent struct {
 	} `json:"titers,omitempty"`
 }
 
-func (c *Client) GetSystemCapacity(fields []string) (*SystemCapacityInstances, error) {
+func (c *UnisphereClient) GetSystemCapacity(fields []string) (*SystemCapacityInstances, error) {
 	joinedFields := strings.Join(fields, ",")
 	body, err := c.get("/api/types/systemCapacity/instances?compact=true&fields=" + joinedFields)
 	if err != nil {

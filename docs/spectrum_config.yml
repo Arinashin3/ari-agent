@@ -35,12 +35,12 @@ server:
 ## auth = 사용할 인증 정보(auths.name)
 ## Insecure = TLS 설정
 clients:
-#  - endpoint: 'https://10.77.77.170:7443'
-#    auth: 'appez'
-#    insecure: true
-#    labels:
-#      env: "production"
-#      host_group: "IBM"
+  - endpoint: 'https://10.77.77.170:7443'
+    auth: 'appez'
+    insecure: true
+    labels:
+      env: "production"
+      host_group: "IBM"
 #
   - endpoint: 'https://10.77.77.140:7443'
     auth: 'appez'
@@ -58,15 +58,9 @@ auths:
 # default :
 # if interval is not define, that will be to set global.
 providers:
-  lssystem:
+  system:
     enabled: true
-  capacity:
-    enabled: true
-  lssystemstats:
-
+#  performance:
+#    interval: 1m
   event:
     enabled: true
-    level: 5
-  lun:
-    enabled: true
-    interval: 1m

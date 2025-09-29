@@ -24,7 +24,7 @@ type BasicSystemInfoContent struct {
 	EarliestApiVersion  string `json:"earliestApiVersion,omitempty"`
 }
 
-func (c *Client) GetBasicSystemInfo(fields []string) (*BasicSystemInfoInstances, error) {
+func (c *UnisphereClient) GetBasicSystemInfo(fields []string) (*BasicSystemInfoInstances, error) {
 	path := "/api/types/basicSystemInfo/instances?compact=true"
 	if len(fields) != 0 {
 		path += "&fields=" + strings.Join(fields, ",")

@@ -14,7 +14,7 @@ type MetricRealTimeQueryInstances struct {
 	} `json:"content"`
 }
 
-func (c *Client) PostMetricRealTimeQuery(paths []string, interval time.Duration) (string, error) {
+func (c *UnisphereClient) PostMetricRealTimeQuery(paths []string, interval time.Duration) (string, error) {
 	path := "/api/types/metricRealTimeQuery/instances"
 	var reqBodySt struct {
 		Paths    []string `json:"paths"`

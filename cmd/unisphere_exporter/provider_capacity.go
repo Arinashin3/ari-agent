@@ -116,6 +116,7 @@ func (pv *capacityProvider) Run() {
 		data, err := uc.GetSystemCapacity(paramsFields)
 		if err != nil {
 			logger.Error("Failed to get capacity", "error", err)
+			return nil
 		}
 
 		// Capacity Attributes...

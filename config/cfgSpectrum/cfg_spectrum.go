@@ -25,6 +25,7 @@ type SpectrumProviders struct {
 	System      *config.CommonProviderDefaults `yaml: "system,omitempty"`
 	Performance *config.CommonProviderDefaults `yaml: "performance,omitempty"`
 	Event       *config.CommonProviderDefaults `yaml: "event,omitempty"`
+	Flashcopy   *config.CommonProviderDefaults `yaml: "flashcopy,omitempty"`
 }
 
 func NewSpectrumConfiguration() *SpectrumConfig {
@@ -61,6 +62,7 @@ func NewSpectrumConfiguration() *SpectrumConfig {
 			System:      &config.CommonProviderDefaults{},
 			Performance: &config.CommonProviderDefaults{},
 			Event:       &config.CommonProviderDefaults{},
+			Flashcopy:   &config.CommonProviderDefaults{},
 		},
 	}
 }

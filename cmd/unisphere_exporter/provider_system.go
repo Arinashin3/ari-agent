@@ -84,16 +84,29 @@ func (pv *systemProvider) Run() {
 		}
 		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
-		// Request Data
+		// Request Data (MgmtInterface)
+		mgmtData, err := uc.GetMgmtInterface([]string{"ipAddress"})
+		if err != nil {
+			logger.Error("Failed to get system", "error", err)
+			return nil
+		}
+
+		var ipaddr string
+		for _, entry := range mgmtData.Entries {
+			content := entry.Content
+			ipaddr = content.IpAddress
+		}
+		// Request Data (BasicSystemInfo)
 		data, err := uc.GetBasicSystemInfo(paramsFields)
 		if err != nil {
 			logger.Error("Failed to get system", "error", err)
+			return nil
 		}
 
 		// System Attributes...
 		for _, entry := range data.Entries {
 			content := entry.Content
-			infoAttrs := metric.WithAttributes(attribute.String("product.name", content.Model), attribute.String("firmware.version", content.SoftwareFullVersion))
+			infoAttrs := metric.WithAttributes(attribute.String("product.name", content.Model), attribute.String("firmware.version", content.SoftwareFullVersion), attribute.String("ip.address", ipaddr))
 			observer.ObserveFloat64(observableMap["info"], 1, clientAttrs, infoAttrs)
 		}
 

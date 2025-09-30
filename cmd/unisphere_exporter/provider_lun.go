@@ -115,6 +115,7 @@ func (pv *lunProvider) Run() {
 		data, err := uc.GetLun(paramsFields)
 		if err != nil {
 			logger.Error("Failed to get lun", "error", err)
+			return nil
 		}
 
 		// Lun Attributes...

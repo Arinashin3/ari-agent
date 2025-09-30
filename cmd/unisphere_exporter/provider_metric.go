@@ -175,6 +175,7 @@ func (pv *metricProvider) Run() {
 		data, err := uc.GetMetricQueryResult(pv.queryId)
 		if err != nil {
 			logger.Error("Failed to get metric", "error", err)
+			return nil
 		}
 
 		// Metric Attributes...
@@ -199,6 +200,7 @@ func (pv *metricProvider) Run() {
 					f, err = strconv.ParseFloat(v1.(string), 64)
 					if err != nil {
 						logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
+						continue
 					}
 					observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1)))
 					continue
@@ -209,6 +211,7 @@ func (pv *metricProvider) Run() {
 						f, err = strconv.ParseFloat(v2.(string), 64)
 						if err != nil {
 							logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
+							continue
 						}
 						observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2)))
 						continue
@@ -219,6 +222,7 @@ func (pv *metricProvider) Run() {
 							f, err = strconv.ParseFloat(v3.(string), 64)
 							if err != nil {
 								logger.Error("Failed to parse metric value", "provider", pv.moduleName, "path", content.Path, "error", err)
+								continue
 							}
 							observer.ObserveFloat64(observableMap[content.Path], f, clientAttrs, metric.WithAttributes(attribute.String(labels[0], k1), attribute.String(labels[1], k2), attribute.String(labels[2], k3)))
 							continue

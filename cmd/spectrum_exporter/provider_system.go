@@ -125,6 +125,7 @@ func (pv *systemProvider) Run() {
 		infoAttrs := metric.WithAttributes(
 			attribute.String("product.name", data.ProductName),
 			attribute.String("firmware.version", data.CodeLevel),
+			attribute.String("ip.address", data.ConsoleIP),
 		)
 		observer.ObserveFloat64(observableMap["info"], 1, clientAttrs, infoAttrs)
 		observer.ObserveFloat64(observableMap["TotalVdiskCapacity"], convert.ParseUnitConvert(data.TotalVdiskCapacity, "mb"), clientAttrs)

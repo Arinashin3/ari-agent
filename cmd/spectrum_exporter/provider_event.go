@@ -73,11 +73,11 @@ func (pv *eventProvider) Run() {
 			record.SetObservedTimestamp(eventTime)
 			if event.ErrorCode != "" {
 				record.AddAttributes(
-					log.String("error.code", "ALERT"),
+					log.String("level", "ALERT"),
 				)
 			} else {
 				record.AddAttributes(
-					log.String("error.code", "INFO"),
+					log.String("level", "INFO"),
 				)
 			}
 			record.AddAttributes(

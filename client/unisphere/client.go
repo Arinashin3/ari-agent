@@ -11,6 +11,15 @@ import (
 	"time"
 )
 
+type UnisphereClient struct {
+	endpoint   string
+	auth       string
+	token      string
+	lastAccess bool
+	accessTime time.Time
+	hc         *http.Client
+}
+
 func NewClient(endpoint string, auth string, insecure bool) *UnisphereClient {
 	return &UnisphereClient{
 		endpoint: endpoint,

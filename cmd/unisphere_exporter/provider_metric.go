@@ -77,7 +77,10 @@ func (pv *metricProvider) Run() {
 	uc := pv.clientDesc.client
 
 	// Get Metric Descriptions from Unisphere API...
-	metricData, err := uc.GetMetricInstances([]string{"name", "path", "type", "unitDisplayString", "description"}, "realtime")
+	filters := []string{
+		"isRealtimeAvailable eq true",
+	}
+	metricData, err := uc.GetMetricInstances([]string{"name", "path", "type", "unitDisplayString", "description"}, filters)
 	if err != nil {
 		logger.Error("Failed to get metric instances", "provider", pv.moduleName, "error", err)
 		return
@@ -180,7 +183,6 @@ func (pv *metricProvider) Run() {
 		}
 
 		// Metric Attributes...
-
 		for _, entry := range data.Entries {
 			content := entry.Content
 

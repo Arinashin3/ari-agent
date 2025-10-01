@@ -1,6 +1,6 @@
 module github.com/Arinashin3/ari-agent
 
-go 1.23.8
+go 1.24
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	github.com/Arinashin3/gounity v0.0.0-20251001090747-d62777f0dc38 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

@@ -77,7 +77,7 @@ func (pv *metricProvider) Run() {
 	uc := pv.clientDesc.client
 
 	// Get Metric Descriptions from Unisphere API...
-	metricData, err := uc.GetMetric([]string{"name", "path", "type", "unitDisplayString", "description"}, "realtime")
+	metricData, err := uc.GetMetricInstances([]string{"name", "path", "type", "unitDisplayString", "description"}, "realtime")
 	if err != nil {
 		logger.Error("Failed to get metric instances", "provider", pv.moduleName, "error", err)
 		return
@@ -149,19 +149,19 @@ func (pv *metricProvider) Run() {
 	}
 	logger.Info("Create Metric Query", "provider", pv.moduleName, "path_count", len(metricPaths))
 
-	pv.queryId, err = uc.PostMetricRealTimeQuery(metricPaths, pv.interval)
+	queryResult, err := uc.PostMetricRealTimeQueryInstances(metricPaths, pv.interval)
 	if err != nil {
 		logger.Error("Failed to post metric query", "provider", pv.moduleName, "error", err)
 	}
+	pv.queryId = strconv.Itoa(queryResult.Content.Id)
 
 	// Callback
 	meter.RegisterCallback(func(ctx context.Context, observer metric.Observer) error {
 
 		if pv.queryId == "" {
-			pv.queryId, err = uc.PostMetricRealTimeQuery(metricPaths, pv.interval)
+			queryResult, err = uc.PostMetricRealTimeQueryInstances(metricPaths, pv.interval)
 			if err != nil {
-				logger.Warn("Failed to post metric", "provider", pv.moduleName, "error", err)
-				return nil
+				logger.Error("Failed to post metric query", "provider", pv.moduleName, "error", err)
 			}
 		}
 
@@ -172,7 +172,8 @@ func (pv *metricProvider) Run() {
 		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
 		// Request Data
-		data, err := uc.GetMetricQueryResult(pv.queryId)
+		qid, _ := strconv.Atoi(pv.queryId)
+		data, err := uc.GetMetricQueryResultInstances(qid)
 		if err != nil {
 			logger.Error("Failed to get metric", "error", err)
 			return nil

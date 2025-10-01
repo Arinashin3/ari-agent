@@ -72,9 +72,6 @@ func (pv *systemProvider) Run() {
 		observableArray = append(observableArray, obserable)
 	}
 
-	// Request Fields
-	var paramsFields = []string{"model", "softwareFullVersion"}
-
 	// Callback
 	meter.RegisterCallback(func(ctx context.Context, observer metric.Observer) error {
 
@@ -85,7 +82,7 @@ func (pv *systemProvider) Run() {
 		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
 		// Request Data (MgmtInterface)
-		mgmtData, err := uc.GetMgmtInterface([]string{"ipAddress"})
+		mgmtData, err := uc.GetMgmtInterfaceInstances([]string{"ipAddress"}, nil)
 		if err != nil {
 			logger.Error("Failed to get system", "error", err)
 			return nil
@@ -97,7 +94,7 @@ func (pv *systemProvider) Run() {
 			ipaddr = content.IpAddress
 		}
 		// Request Data (BasicSystemInfo)
-		data, err := uc.GetBasicSystemInfo(paramsFields)
+		data, err := uc.GetBasicSystemInfoInstances()
 		if err != nil {
 			logger.Error("Failed to get system", "error", err)
 			return nil

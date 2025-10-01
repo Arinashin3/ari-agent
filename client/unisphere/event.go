@@ -31,7 +31,7 @@ func (c *UnisphereClient) GetEvent(fields []string, createTime time.Time) (*Even
 	}
 
 	if !createTime.IsZero() {
-		path += "&filter=creationTime%20gt%20\"" + createTime.UTC().Format("2006-01-02T15:04:05.000Z") + "\""
+		path += "&filter=creationTime%20gt%20\"" + createTime.UTC().Format("2006-01-02T15:04:05Z") + "\""
 	}
 
 	var body []byte

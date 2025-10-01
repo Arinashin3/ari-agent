@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Arinashin3/ari-agent/client/unisphere"
 	"github.com/Arinashin3/ari-agent/config/cfgUnisphere"
 	"github.com/Arinashin3/ari-agent/utils/provider"
+	"github.com/Arinashin3/gounity"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/promslog"
 	promslogflag "github.com/prometheus/common/promslog/flag"
@@ -43,7 +43,7 @@ type ClientDesc struct {
 	endpoint     string
 	customLabels []attribute.KeyValue
 	hostLabels   []attribute.KeyValue
-	client       *unisphere.UnisphereClient
+	client       *gounity.UnisphereClient
 }
 
 type Provider interface {
@@ -120,12 +120,12 @@ func RegistryProviders() {
 		for k, v := range clientConf.Labels {
 			customLabels = append(customLabels, attribute.String(k, v))
 		}
-		auth := cfg.SearchAuth(clientConf.Auth)
-		if auth == "" {
+		username, password := cfg.SearchAuth(clientConf.Auth)
+		if username != "" || password != "" {
 			logger.Error("Cannot found the authentication credentials.", "auth", clientConf.Auth)
 		}
 		insecure, _ = strconv.ParseBool(clientConf.Insecure)
-		cm := unisphere.NewClient(endpoint, auth, insecure)
+		cm := gounity.NewClient(endpoint, username, password, insecure)
 
 		cl := &ClientDesc{
 			endpoint:     endpoint,
@@ -152,7 +152,7 @@ func RunProviders() {
 }
 
 func UpdateAttributes(cl *ClientDesc) error {
-	data, err := cl.client.GetSystem([]string{"name", "serialNumber"})
+	data, err := cl.client.GetSystemInstances([]string{"name", "serialNumber"}, nil)
 	if data == nil {
 		return errors.New("cannot to Update Attributes")
 	}

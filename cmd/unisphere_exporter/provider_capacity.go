@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Arinashin3/ari-agent/utils/convert"
 	"github.com/Arinashin3/ari-agent/utils/provider"
 	"go.opentelemetry.io/otel/metric"
 	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
@@ -113,7 +112,7 @@ func (pv *capacityProvider) Run() {
 		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
 		// Request Data
-		data, err := uc.GetSystemCapacity(paramsFields)
+		data, err := uc.GetSystemCapacityInstances(paramsFields, nil)
 		if err != nil {
 			logger.Error("Failed to get capacity", "error", err)
 			return nil
@@ -122,11 +121,11 @@ func (pv *capacityProvider) Run() {
 		// Capacity Attributes...
 		for _, entry := range data.Entries {
 			content := entry.Content
-			observer.ObserveFloat64(observableMap["sizeTotal"], convert.UnitConvert(content.SizeTotal, "mb"), clientAttrs)
-			observer.ObserveFloat64(observableMap["sizeUsed"], convert.UnitConvert(content.SizeUsed, "mb"), clientAttrs)
-			observer.ObserveFloat64(observableMap["sizeFree"], convert.UnitConvert(content.SizeFree, "mb"), clientAttrs)
-			observer.ObserveFloat64(observableMap["sizePreallocated"], convert.UnitConvert(content.SizePreallocated, "mb"), clientAttrs)
-			observer.ObserveFloat64(observableMap["totalLogicalSize"], convert.UnitConvert(content.TotalLogicalSize, "mb"), clientAttrs)
+			observer.ObserveFloat64(observableMap["sizeTotal"], content.SizeTotal.ToMiB(), clientAttrs)
+			observer.ObserveFloat64(observableMap["sizeUsed"], content.SizeUsed.ToMiB(), clientAttrs)
+			observer.ObserveFloat64(observableMap["sizeFree"], content.SizeFree.ToMiB(), clientAttrs)
+			observer.ObserveFloat64(observableMap["sizePreallocated"], content.SizePreallocated.ToMiB(), clientAttrs)
+			observer.ObserveFloat64(observableMap["totalLogicalSize"], content.TotalLogicalSize.ToMiB(), clientAttrs)
 		}
 
 		return nil

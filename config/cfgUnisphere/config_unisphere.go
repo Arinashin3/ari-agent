@@ -3,7 +3,6 @@ package cfgUnisphere
 // build: spectrum_exporter
 
 import (
-	"encoding/base64"
 	"errors"
 	"os"
 	"reflect"
@@ -169,13 +168,13 @@ func (cfg *UnisphereConfig) applyGlobal() error {
 
 // SearchAuth
 // 인증정보를 찾아, base64로 인코딩하여 리턴합니다.
-func (cfg *UnisphereConfig) SearchAuth(name string) string {
+func (cfg *UnisphereConfig) SearchAuth(name string) (string, string) {
 	for _, auth := range cfg.Auths {
 		if auth.Name == name {
-			return base64.StdEncoding.EncodeToString([]byte(auth.User + ":" + auth.Password))
+			return auth.User, auth.Password
 		}
 	}
-	return ""
+	return "", ""
 }
 
 func (cfg *UnisphereConfig) GetConfig() *UnisphereConfig {

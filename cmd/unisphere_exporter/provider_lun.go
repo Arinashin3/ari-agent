@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Arinashin3/ari-agent/utils/convert"
 	"github.com/Arinashin3/ari-agent/utils/provider"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -112,7 +111,7 @@ func (pv *lunProvider) Run() {
 		clientAttrs := metric.WithAttributes(pv.clientDesc.hostLabels...)
 
 		// Request Data
-		data, err := uc.GetLun(paramsFields)
+		data, err := uc.GetLunInstances(paramsFields, nil)
 		if err != nil {
 			logger.Error("Failed to get lun", "error", err)
 			return nil
@@ -122,10 +121,10 @@ func (pv *lunProvider) Run() {
 		for _, entry := range data.Entries {
 			content := entry.Content
 			lunAttrs := metric.WithAttributes(attribute.String("lun.name", content.Name), attribute.String("lun.wwn", content.Wwn))
-			observer.ObserveFloat64(observableMap["sizeTotal"], convert.UnitConvert(content.SizeTotal, "mb"), clientAttrs, lunAttrs)
-			observer.ObserveFloat64(observableMap["sizeUsed"], convert.UnitConvert(content.SizeUsed, "mb"), clientAttrs, lunAttrs)
-			observer.ObserveFloat64(observableMap["sizeAllocated"], convert.UnitConvert(content.SizeAllocated, "mb"), clientAttrs, lunAttrs)
-			observer.ObserveFloat64(observableMap["sizePreallocated"], convert.UnitConvert(content.SizePreallocated, "mb"), clientAttrs, lunAttrs)
+			observer.ObserveFloat64(observableMap["sizeTotal"], content.SizeTotal.ToMiB(), clientAttrs, lunAttrs)
+			observer.ObserveFloat64(observableMap["sizeUsed"], content.SizeUsed.ToMiB(), clientAttrs, lunAttrs)
+			observer.ObserveFloat64(observableMap["sizeAllocated"], content.SizeAllocated.ToMiB(), clientAttrs, lunAttrs)
+			observer.ObserveFloat64(observableMap["sizePreallocated"], content.SizePreallocated.ToMiB(), clientAttrs, lunAttrs)
 		}
 
 		return nil

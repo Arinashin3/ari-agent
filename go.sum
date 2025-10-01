@@ -1,3 +1,5 @@
+github.com/Arinashin3/gounity v0.0.0-20251001090747-d62777f0dc38 h1:6cr95m/mhwybL3lL/0YKCcXEZgv6tQrD1BA3Xl4X038=
+github.com/Arinashin3/gounity v0.0.0-20251001090747-d62777f0dc38/go.mod h1:JVnTOL8oEMkkZ1uQBgx+TrFlK73Nh5SeA4ZyujHxnCM=
 github.com/alecthomas/kingpin/v2 v2.4.0 h1:f48lwail6p8zpO1bC4TxtqACaGqHYA22qkHjHpqDjYY=
 github.com/alecthomas/kingpin/v2 v2.4.0/go.mod h1:0gyi0zQnjuFk8xrkNKamJoyUo382HRL7ATRpFZCw6tE=
 github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 h1:s6gZFSlWYmbqAuRjVTiNNhvNRfY2Wxp9nhfyel4rklc=

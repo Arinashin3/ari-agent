@@ -64,7 +64,10 @@ func (pv *eventProvider) Run() {
 			"message",
 			"source",
 		}
-		data, err := uc.GetEvent(fields, ctime)
+		filters := []string{
+			"creationTime gt \"" + ctime.Format("2006-01-02T15:04:05.000Z") + "\"",
+		}
+		data, err := uc.GetEventInstances(fields, filters)
 		if err != nil {
 			logger.Error("Error to GET EventLog", "err", err)
 			time.Sleep(pv.interval)
@@ -78,37 +81,15 @@ func (pv *eventProvider) Run() {
 		for _, entry := range data.Entries {
 			record := log.Record{}
 			content := entry.Content
-			var severity string
 			if pv.level > int(content.Severity) {
 				continue
-			}
-			switch content.Severity {
-			case 8:
-				severity = "OK"
-			case 7:
-				severity = "DEBUG"
-			case 6:
-				severity = "INFO"
-			case 5:
-				severity = "NOTICE"
-			case 4:
-				severity = "WARNING"
-			case 3:
-				severity = "ERROR"
-			case 2:
-				severity = "CRITICAL"
-			case 1:
-				severity = "ALERT"
-			case 0:
-				severity = "EMERGENCY"
-
 			}
 
 			record.SetTimestamp(content.CreationTime)
 			record.SetObservedTimestamp(content.CreationTime)
 			record.SetBody(log.StringValue(content.Message))
 			record.AddAttributes(
-				log.String("level", severity),
+				log.String("level", content.Severity.String()),
 				log.String("message.id", content.MessageId),
 				log.String("source", content.Source),
 			)
